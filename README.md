@@ -125,6 +125,7 @@ For full functionality, install these security tools:
 - subfinder
 - nmap
 - gobuster/gobuster
+Or you can use your local tools that are already installed.
 
 ## License
 
