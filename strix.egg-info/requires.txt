@@ -1,0 +1,16 @@
+python-dotenv
+google-generativeai
+colorama
+prompt_toolkit
+
+[anthropic]
+anthropic
+
+[groq]
+groq
+
+[mistralai]
+mistralai
+
+[openai]
+openai
