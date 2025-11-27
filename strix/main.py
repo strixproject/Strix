@@ -1,4 +1,3 @@
-
 import os
 import sys
 import subprocess
@@ -9,7 +8,6 @@ import time
 import threading
 from dotenv import load_dotenv
 import google.generativeai as genai
-
 
 try:
     from colorama import init as colorama_init, Fore, Back, Style
@@ -24,20 +22,51 @@ except Exception:
     Fore, Back, Style = _F(), _B(), _S()
     def colorama_init(autoreset=True): pass
 
+from prompt_toolkit import prompt
+from prompt_toolkit.completion import WordCompleter
+from prompt_toolkit.shortcuts import confirm
+
 
 PALETTE = {
     "accent": Fore.CYAN + Style.BRIGHT,
     "muted": Fore.WHITE + Style.DIM,
     "success": Fore.GREEN + Style.BRIGHT,
+    "placeholder": Fore.BLACK + Style.DIM,
     "error": Fore.RED + Style.BRIGHT,
     "command": Fore.YELLOW + Style.NORMAL,
     "banner_bg": Back.MAGENTA,
+    "user_input": Fore.MAGENTA + Style.BRIGHT,
+    "ai_response": Fore.CYAN + Style.NORMAL,
+    "tool_call": Fore.YELLOW + Style.DIM,
+    "tool_output": Fore.BLUE + Style.BRIGHT,
     "reset": Style.RESET_ALL
 }
 
 
 dotenv_path = os.path.join(os.path.dirname(__file__), ".env")
 load_dotenv(dotenv_path)
+
+
+def get_yes_no_input(message: str) -> bool:
+    """Get yes/no input using prompt_toolkit with proper color support"""
+    try:
+        from prompt_toolkit.formatted_text import ANSI
+        colored_message = ANSI(message)
+        return confirm(colored_message)
+    except ImportError:
+        # Fallback to regular input if prompt_toolkit is not available
+        return input(message).strip().lower() in ['y', 'yes']
+
+
+def get_text_input(prompt_text: str) -> str:
+    """Get text input using prompt_toolkit with proper color support"""
+    try:
+        from prompt_toolkit.formatted_text import ANSI
+        colored_prompt = ANSI(prompt_text)
+        return prompt(colored_prompt).strip()
+    except ImportError:
+        # Fallback to regular input if prompt_toolkit is not available
+        return input(prompt_text).strip()
 
 
 def ensure_env_file():
@@ -77,11 +106,39 @@ def select_ai_model():
     if model_choice and model_choice != "":
         print(PALETTE["accent"] + f"\nUsing saved model choice: {model_choice}" + PALETTE["reset"])
 
+        # Expanded model mapping with multiple options per provider
         model_map = {
+            # Gemini models
+            "1": ("gemini", os.getenv("GOOGLE_API_KEY"), "gemini-2.5-flash"),
+            "11": ("gemini", os.getenv("GOOGLE_API_KEY"), "gemini-2.0-flash"),
+            "12": ("gemini", os.getenv("GOOGLE_API_KEY"), "gemini-1.5-pro"),
+            "13": ("gemini", os.getenv("GOOGLE_API_KEY"), "gemini-1.5-pro-exp"),
+            "14": ("gemini", os.getenv("GOOGLE_API_KEY"), "gemini-1.0-pro"),
+            
+            # OpenAI models
             "2": ("openai", os.getenv("OPENAI_API_KEY"), "gpt-4"),
+            "21": ("openai", os.getenv("OPENAI_API_KEY"), "gpt-4-turbo"),
+            "22": ("openai", os.getenv("OPENAI_API_KEY"), "gpt-4o"),
+            "23": ("openai", os.getenv("OPENAI_API_KEY"), "gpt-3.5-turbo"),
+            
+            # Anthropic models
             "3": ("anthropic", os.getenv("ANTHROPIC_API_KEY"), "claude-3-sonnet"),
+            "31": ("anthropic", os.getenv("ANTHROPIC_API_KEY"), "claude-3-opus"),
+            "32": ("anthropic", os.getenv("ANTHROPIC_API_KEY"), "claude-3-haiku"),
+            "33": ("anthropic", os.getenv("ANTHROPIC_API_KEY"), "claude-2.1"),
+            
+            # Groq models
             "4": ("groq", os.getenv("GROQ_API_KEY"), "llama3-70b-8192"),
+            "41": ("groq", os.getenv("GROQ_API_KEY"), "llama-3.1-8b"),
+            "42": ("groq", os.getenv("GROQ_API_KEY"), "llama-3.1-70b"),
+            "43": ("groq", os.getenv("GROQ_API_KEY"), "mixtral-8x7b"),
+            "44": ("groq", os.getenv("GROQ_API_KEY"), "gemma-7b"),
+            
+            # Mistral models
             "5": ("mistral", os.getenv("MISTRAL_API_KEY"), "mistral-small-latest"),
+            "51": ("mistral", os.getenv("MISTRAL_API_KEY"), "mistral-large"),
+            "52": ("mistral", os.getenv("MISTRAL_API_KEY"), "mistral-medium"),
+            "53": ("mistral", os.getenv("MISTRAL_API_KEY"), "mistral-nemo"),
         }
         
         if model_choice in model_map:
@@ -90,27 +147,98 @@ def select_ai_model():
             return "gemini", os.getenv("GOOGLE_API_KEY"), "gemini-2.5-flash"
     
     print(PALETTE["accent"] + "\nSelect AI Model:" + PALETTE["reset"])
-    print("1. Google Gemini (gemini-2.5-flash)")
-    print("2. OpenAI GPT-4 (gpt-4)")
-    print("3. Anthropic Claude (claude-3-sonnet)")
-    print("4. Groq LLaMA 3 (llama3-70b-8192)")
-    print("5. Mistral (mistral-small-latest)")
     
-    choice = input("Enter choice (1-5) [default: 1]: ").strip()
+    # Detailed model selection menu
+    print("\n[1]  Google Gemini")
+    print("     1. gemini-2.5-flash (default)")
+    print("     11. gemini-2.0-flash")
+    print("     12. gemini-1.5-pro")
+    print("     13. gemini-1.5-pro-exp")
+    print("     14. gemini-1.0-pro")
+    
+    print("\n[2]  OpenAI")
+    print("     2. gpt-4")
+    print("     21. gpt-4-turbo")
+    print("     22. gpt-4o")
+    print("     23. gpt-3.5-turbo")
+    
+    print("\n[3]  Anthropic")
+    print("     3. claude-3-sonnet")
+    print("     31. claude-3-opus")
+    print("     32. claude-3-haiku")
+    print("     33. claude-2.1")
+    
+    print("\n[4]  Groq")
+    print("     4. llama3-70b-8192")
+    print("     41. llama-3.1-8b")
+    print("     42. llama-3.1-70b")
+    print("     43. mixtral-8x7b")
+    print("     44. gemma-7b")
+    
+    print("\n[5]  Mistral")
+    print("     5. mistral-small-latest")
+    print("     51. mistral-large")
+    print("     52. mistral-medium")
+    print("     53. mistral-nemo")
+    
+    choice = input("\nEnter choice (e.g., 1 for gemini-2.5-flash, 22 for gpt-4o) [default: 1]: ").strip() or "1"
     
 
     with open(env_path, 'a') as f:
         f.write(f"\nSTRIX_MODEL_CHOICE={choice}\n")
     
-    if choice == "2":
-        return "openai", os.getenv("OPENAI_API_KEY"), "gpt-4"
-    elif choice == "3":
-        return "anthropic", os.getenv("ANTHROPIC_API_KEY"), "claude-3-sonnet"
-    elif choice == "4":
-        return "groq", os.getenv("GROQ_API_KEY"), "llama3-70b-8192"
-    elif choice == "5":
-        return "mistral", os.getenv("MISTRAL_API_KEY"), "mistral-small-latest"
+    # Expanded model selection logic
+    if choice in ["11", "12", "13", "14"]:
+        if choice == "11":
+            return "gemini", os.getenv("GOOGLE_API_KEY"), "gemini-2.0-flash"
+        elif choice == "12":
+            return "gemini", os.getenv("GOOGLE_API_KEY"), "gemini-1.5-pro"
+        elif choice == "13":
+            return "gemini", os.getenv("GOOGLE_API_KEY"), "gemini-1.5-pro-exp"
+        elif choice == "14":
+            return "gemini", os.getenv("GOOGLE_API_KEY"), "gemini-1.0-pro"
+        else:
+            return "gemini", os.getenv("GOOGLE_API_KEY"), "gemini-2.5-flash"
+    elif choice in ["2", "21", "22", "23"]:
+        if choice == "21":
+            return "openai", os.getenv("OPENAI_API_KEY"), "gpt-4-turbo"
+        elif choice == "22":
+            return "openai", os.getenv("OPENAI_API_KEY"), "gpt-4o"
+        elif choice == "23":
+            return "openai", os.getenv("OPENAI_API_KEY"), "gpt-3.5-turbo"
+        else:
+            return "openai", os.getenv("OPENAI_API_KEY"), "gpt-4"
+    elif choice in ["3", "31", "32", "33"]:
+        if choice == "31":
+            return "anthropic", os.getenv("ANTHROPIC_API_KEY"), "claude-3-opus"
+        elif choice == "32":
+            return "anthropic", os.getenv("ANTHROPIC_API_KEY"), "claude-3-haiku"
+        elif choice == "33":
+            return "anthropic", os.getenv("ANTHROPIC_API_KEY"), "claude-2.1"
+        else:
+            return "anthropic", os.getenv("ANTHROPIC_API_KEY"), "claude-3-sonnet"
+    elif choice in ["4", "41", "42", "43", "44"]:
+        if choice == "41":
+            return "groq", os.getenv("GROQ_API_KEY"), "llama-3.1-8b"
+        elif choice == "42":
+            return "groq", os.getenv("GROQ_API_KEY"), "llama-3.1-70b"
+        elif choice == "43":
+            return "groq", os.getenv("GROQ_API_KEY"), "mixtral-8x7b"
+        elif choice == "44":
+            return "groq", os.getenv("GROQ_API_KEY"), "gemma-7b"
+        else:
+            return "groq", os.getenv("GROQ_API_KEY"), "llama3-70b-8192"
+    elif choice in ["51", "52", "53"]:
+        if choice == "51":
+            return "mistral", os.getenv("MISTRAL_API_KEY"), "mistral-large"
+        elif choice == "52":
+            return "mistral", os.getenv("MISTRAL_API_KEY"), "mistral-medium"
+        elif choice == "53":
+            return "mistral", os.getenv("MISTRAL_API_KEY"), "mistral-nemo"
+        else:
+            return "mistral", os.getenv("MISTRAL_API_KEY"), "mistral-small-latest"
     else:
+        # Default to gemini-2.5-flash
         return "gemini", os.getenv("GOOGLE_API_KEY"), "gemini-2.5-flash"
 
 def validate_api_key(ai_type, api_key):
@@ -120,10 +248,10 @@ def validate_api_key(ai_type, api_key):
         print(PALETTE["muted"] + "Example: " + ai_type.upper() + "_API_KEY=your_api_key_here" + PALETTE["reset"])
         
 
-        setup_choice = input(PALETTE["accent"] + "\nWould you like to add your API key now? (y/N): " + PALETTE["reset"]).strip().lower()
+        setup_choice = "y" if get_yes_no_input(PALETTE["accent"] + "\nWould you like to add your API key now? (y/N): " + PALETTE["reset"]) else "n"
         
         if setup_choice == 'y':
-            api_key_value = input(f"Enter your {ai_type} API key: ").strip()
+            api_key_value = get_text_input(f"Enter your {ai_type} API key: ")
             if api_key_value:
 
                 env_path = os.path.expanduser("~/Strix/.env")
@@ -140,7 +268,6 @@ def validate_api_key(ai_type, api_key):
             sys.exit(1)
 
 def initialize_ai():
-    """Initialize AI model after model selection"""
     ai_type, API_KEY, MODEL = select_ai_model()
     validate_api_key(ai_type, API_KEY)
 
@@ -226,20 +353,41 @@ def define_tools():
 
 
 def run_command(command: str, auto_save: bool = False) -> str:
+    # Security validation: sanitize and validate command to prevent injection
+    if not command or len(command.strip()) == 0:
+        return "Error: Empty command provided."
+    
+    # Validate that command doesn't contain dangerous characters/sequences
+    dangerous_patterns = [';', '&&', '||', '|', '`', '$(', '>', '<', '>>', '>>>', ';&', ';&;']
+    for pattern in dangerous_patterns:
+        if pattern in command:
+            return f"Error: Command contains potentially dangerous pattern: {pattern}"
+    
+    # Basic validation to prevent directory traversal or path manipulation
+    if '..' in command or command.startswith('/') or command.startswith('../'):
+        return "Error: Command contains invalid path pattern."
+    
     if not auto_save:
-        print(PALETTE["command"] + "\n[AI PROPOSED COMMAND]\n  $ " + command + "\n" + ("-" * 40) + PALETTE["reset"])
-        confirmation = input("Are you sure you want to execute this command? [y/N]: ").strip().lower()
+        print(PALETTE["command"] + "\n[AI PROPOSED COMMAND]\n  $ " + command + "\n" + PALETTE["reset"])
+        confirmation = "y" if get_yes_no_input("Are you sure you want to execute this command? [y/N]: ") else "n"
         if confirmation != 'y':
             return "Command cancelled by user."
     else:
         print(PALETTE["muted"] + f"\n[AUTO-SAVE MODE ON] Executing: $ {command}" + PALETTE["reset"])
+        
     try:
-        result = subprocess.run(command, shell=True, check=True, text=True, capture_output=True, encoding='utf-8')
+        # Use shell=False and split the command to prevent shell injection
+        import shlex
+        cmd_parts = shlex.split(command)
+        result = subprocess.run(cmd_parts, check=True, text=True, capture_output=True, encoding='utf-8')
         stdout, stderr = result.stdout or "", result.stderr or ""
         combined = stdout + ("\n[STDERR]\n" + stderr if stderr else "")
         return combined.strip()
     except subprocess.CalledProcessError as e:
         return f"Error: Command failed. Exit code {e.returncode}.\nStderr: {e.stderr}"
+    except ValueError as e:
+        # This handles shlex.split errors
+        return f"Error: Invalid command format: {e}"
     except Exception as e:
         return f"Error occurred: {e}"
 
@@ -272,8 +420,15 @@ def write_file(path: str, content: str, auto_save: bool = False) -> str:
         content_preview = "\n".join(lines[:preview_lines])
         if len(lines) > preview_lines:
             content_preview += f"\n... (and {len(lines) - preview_lines} more lines)"
-        print(PALETTE["command"] + f"\n[AI PROPOSED WRITE]\n  Path: {path}\n  Content preview:\n---\n{content_preview}\n---" + PALETTE["reset"])
-        confirmation = input("Are you sure you want to write this file? [y/N]: ").strip().lower()
+        
+        # Display path information
+        print(PALETTE["command"] + f"\n[AI PROPOSED WRITE]\n  Path: {path}" + PALETTE["reset"])
+        
+        # Wrap content preview in a bubble format
+        bubble_content = f"Content preview:\n{content_preview}"
+        print(format_chat_bubble(bubble_content, "File Content Preview"))
+        
+        confirmation = "y" if get_yes_no_input("Are you sure you want to write this file? [y/N]: ") else "n"
         if confirmation != 'y':
             return "File write cancelled by user."
     else:
@@ -329,6 +484,44 @@ def call_function(func_call, auto_save: bool):
         return clear_screen()
     return f"Error: Function '{function_name}' not recognized."
 
+def format_chat_bubble(content: str, sender: str = "AI", width: int = 80, color: str = None) -> str:
+    lines = content.split('\n')
+    formatted_lines = []
+    
+    if not color:
+        if sender == "AI" or sender == "Strix":
+            color = PALETTE["ai_response"]
+        elif sender == "AI THOUGHT":
+            color = PALETTE["tool_call"]
+        elif sender.startswith("TOOL"):
+            color = PALETTE["tool_output"]
+        else:
+            color = PALETTE["muted"]
+    
+    formatted_lines.append(color + "┌" + "─" * (width - 2) + "┐" + PALETTE["reset"])
+    
+    if sender:
+        sender_line = f"┌─ {sender} ─{'─' * (width - 6 - len(sender))}┐"
+        if len(sender_line) <= width + 2:
+            formatted_lines[0] = color + sender_line[:width] + "┐" + PALETTE["reset"] if len(sender_line) > width else color + sender_line + PALETTE["reset"]
+        else:
+            formatted_lines.append(color + "┌─ " + sender + " " + "─" * max(0, width - 5 - len(sender)) + "┐" + PALETTE["reset"])
+    
+    import textwrap
+    for line in lines:
+        if line.strip() == "":
+            formatted_lines.append(color + "│" + " " * (width - 2) + "│" + PALETTE["reset"])
+        else:
+            wrapped = textwrap.fill(line, width - 4, break_long_words=True, break_on_hyphens=True, replace_whitespace=False)
+            for wrapped_line in wrapped.split('\n'):
+                padded_line = wrapped_line.ljust(width - 4)
+                formatted_lines.append(color + f"│ {padded_line} │" + PALETTE["reset"])
+    
+    formatted_lines.append(color + "└" + "─" * (width - 2) + "┘" + PALETTE["reset"])
+    
+    bubble_str = "\n".join(formatted_lines)
+    return "\n" + bubble_str
+
 def render_markdown(text: str) -> str:
     text = re.sub(r'^\*\s+(.+)', PALETTE["accent"] + '- ' + r'\1' + PALETTE["reset"], text, flags=re.MULTILINE)
     text = re.sub(r'\*\*(.*?)\*\*', lambda match: PALETTE["accent"] + Style.BRIGHT + match.group(1) + PALETTE["reset"], text)
@@ -336,10 +529,10 @@ def render_markdown(text: str) -> str:
     return text
 
 def show_loading_indicator(stop_event):
-    animation = ["|", "/", "-", "\\"]
+    animation = ['⣾', '⣷', '⣯', '⣟', '⡿', '⢿', '⣻', '⣽']
     idx = 0
     while not stop_event.is_set():
-        print(f"\r{PALETTE['muted']}Thinking... {animation[idx % len(animation)]}{PALETTE['reset']}", end="", flush=True)
+        print(f"\r{PALETTE['muted']}{animation[idx % len(animation)]} Thinking...{PALETTE['reset']}", end="", flush=True)
         idx += 1
         time.sleep(0.1)
     print("\r" + " " * 20 + "\r", end="", flush=True)
@@ -390,25 +583,61 @@ Rules:
         """
     
 
+    # Initialize chat for each AI provider with proper tool support and error handling
     if ai_type == "gemini":
-        pentest_tool = define_tools()
-        model = genai.GenerativeModel(model_name=MODEL, tools=[pentest_tool], system_instruction=system_prompt)
-        chat = model.start_chat(history=[])
+        try:
+            pentest_tool = define_tools()
+            model = genai.GenerativeModel(model_name=MODEL, tools=[pentest_tool], system_instruction=system_prompt)
+            chat = model.start_chat(history=[])
+        except Exception as e:
+            print(PALETTE["error"] + f"\n[ERROR] Failed to initialize Gemini model: {e}" + PALETTE["reset"])
+            return
     elif ai_type == "openai":
-
-
-        pass
+        try:
+            import openai
+            client = openai.OpenAI(api_key=API_KEY)
+            # Initialize conversation history
+            chat_history = [
+                {"role": "system", "content": system_prompt}
+            ]
+        except Exception as e:
+            print(PALETTE["error"] + f"\n[ERROR] Failed to initialize OpenAI client: {e}" + PALETTE["reset"])
+            return
     elif ai_type == "anthropic":
-
-        pass
+        try:
+            import anthropic
+            client = anthropic.Anthropic(api_key=API_KEY)
+            # Initialize conversation history
+            chat_history = [
+                {"role": "system", "content": system_prompt}
+            ]
+        except Exception as e:
+            print(PALETTE["error"] + f"\n[ERROR] Failed to initialize Anthropic client: {e}" + PALETTE["reset"])
+            return
     elif ai_type == "groq":
-
-
-        pass
+        try:
+            import groq
+            client = groq.Groq(api_key=API_KEY)
+            # Initialize conversation history
+            chat_history = [
+                {"role": "system", "content": system_prompt}
+            ]
+        except Exception as e:
+            print(PALETTE["error"] + f"\n[ERROR] Failed to initialize Groq client: {e}" + PALETTE["reset"])
+            return
     elif ai_type == "mistral":
-
-
-        pass
+        try:
+            import mistralai
+            from mistralai.client import MistralClient
+            from mistralai.models.chat_completion import ChatMessage
+            client = MistralClient(api_key=API_KEY)
+            # Initialize conversation history
+            chat_history = [
+                ChatMessage(role="system", content=system_prompt)
+            ]
+        except Exception as e:
+            print(PALETTE["error"] + f"\n[ERROR] Failed to initialize Mistral client: {e}" + PALETTE["reset"])
+            return
 
     mode_text = " (Auto-Save MODE ON)" if auto_save else ""
     banner_lines = [
@@ -430,6 +659,8 @@ Rules:
     try:
         from prompt_toolkit import PromptSession
         from prompt_toolkit.history import InMemoryHistory
+        from prompt_toolkit.formatted_text import ANSI
+    
         session = PromptSession(history=InMemoryHistory())
         use_prompt_toolkit = True
     except ImportError:
@@ -439,15 +670,33 @@ Rules:
     while True:
         try:
             if use_prompt_toolkit:
-                user_input = session.prompt("\nStrix > ")
+                # Buat placeholder dengan warna muted langsung
+                placeholder_text = ANSI(PALETTE["placeholder"] + "Type your message or @path/to/file" + PALETTE["reset"])
+            
+                user_input = session.prompt(
+                    "\n> ",
+                    placeholder=placeholder_text
+                )
             else:
-                user_input = input("\nStrix > ")
+                user_input = input("\n> ")
 
             if user_input.lower() in ['!exit', 'quit']:
                 print(PALETTE["success"] + "Goodbye!" + PALETTE["reset"])
                 break
             if not user_input.strip():
                 continue
+
+            # Check for @ symbol functionality to read files directly
+            if user_input.startswith('@'):
+                file_path = user_input[1:].strip()  # Remove @ symbol and get file path
+                if file_path:
+                    file_content = read_file(file_path)
+                    # Display the file content in a bubble format with appropriate sender
+                    print(format_chat_bubble(file_content, f"File Content: {file_path}"))
+                    continue  # Skip the rest of the processing and wait for next input
+                else:
+                    print(PALETTE["error"] + "Please provide a file path after @ (e.g., @strix/main.py)" + PALETTE["reset"])
+                    continue
 
             stop_event = threading.Event()
             loader_thread = threading.Thread(target=show_loading_indicator, args=(stop_event,))
@@ -487,9 +736,8 @@ Rules:
 
                     if function_call:
                         try:
-                            print(PALETTE["muted"] + f"\n[AI THOUGHT]\nCalling function '{function_call.name}'" + PALETTE["reset"])
                             function_response = call_function(function_call, auto_save)
-                            print(PALETTE["command"] + f"\n[TOOL OUTPUT]\n{function_response}" + PALETTE["reset"])
+                            print(PALETTE["command"] + f"\n[OUTPUT]\n{function_response}" + PALETTE["reset"])
 
                             stop_event = threading.Event()
                             loader_thread = threading.Thread(target=show_loading_indicator, args=(stop_event,))
@@ -512,15 +760,105 @@ Rules:
                         final_text = "".join([part.text for part in response_parts if hasattr(part, 'text')])
                         if final_text.strip():
                             rendered_text = render_markdown(final_text)
-                            print(PALETTE["accent"] + f"\n[AI ANSWER]\n{rendered_text}" + PALETTE["reset"])
+                            print(format_chat_bubble(rendered_text, "Strix"))
                         break
             else:
-
-
-                print(PALETTE["error"] + f"\nFunction calling with tools is not yet implemented for {ai_type.upper()}. Using basic chat mode..." + PALETTE["reset"])
-
-                print(PALETTE["muted"] + f"\n[{ai_type.upper()}] Response would appear here..." + PALETTE["reset"])
-                print(PALETTE["muted"] + "Function calling with tools is currently only supported with Gemini models." + PALETTE["reset"])
+                # Handle chat for non-Gemini models
+                if ai_type == "openai":
+                    try:
+                        chat_history.append({"role": "user", "content": user_input})
+                        response = client.chat.completions.create(
+                            model=MODEL,
+                            messages=chat_history,
+                            temperature=0.7,
+                            max_tokens=2048
+                        )
+                        ai_response = response.choices[0].message.content
+                        chat_history.append({"role": "assistant", "content": ai_response})
+                        
+                        # Print response in a formatted bubble
+                        print(format_chat_bubble(ai_response, "Strix"))
+                        
+                    except Exception as e:
+                        stop_event.set()
+                        loader_thread.join()
+                        print(PALETTE["error"] + f"\n[ERROR] {e}" + PALETTE["reset"])
+                        continue
+                    finally:
+                        stop_event.set()
+                        loader_thread.join()
+                        
+                elif ai_type == "anthropic":
+                    try:
+                        chat_history.append({"role": "user", "content": user_input})
+                        response = client.messages.create(
+                            model=MODEL,
+                            messages=chat_history[1:],  # Skip system message, Anthropic handles it differently
+                            max_tokens=2048,
+                            temperature=0.7
+                        )
+                        ai_response = response.content[0].text
+                        chat_history.append({"role": "assistant", "content": ai_response})
+                        
+                        # Print response in a formatted bubble
+                        print(format_chat_bubble(ai_response, "Strix"))
+                        
+                    except Exception as e:
+                        stop_event.set()
+                        loader_thread.join()
+                        print(PALETTE["error"] + f"\n[ERROR] {e}" + PALETTE["reset"])
+                        continue
+                    finally:
+                        stop_event.set()
+                        loader_thread.join()
+                        
+                elif ai_type == "groq":
+                    try:
+                        chat_history.append({"role": "user", "content": user_input})
+                        response = client.chat.completions.create(
+                            model=MODEL,
+                            messages=chat_history,
+                            temperature=0.7,
+                            max_tokens=2048
+                        )
+                        ai_response = response.choices[0].message.content
+                        chat_history.append({"role": "assistant", "content": ai_response})
+                        
+                        # Print response in a formatted bubble
+                        print(format_chat_bubble(ai_response, "Strix"))
+                        
+                    except Exception as e:
+                        stop_event.set()
+                        loader_thread.join()
+                        print(PALETTE["error"] + f"\n[ERROR] {e}" + PALETTE["reset"])
+                        continue
+                    finally:
+                        stop_event.set()
+                        loader_thread.join()
+                        
+                elif ai_type == "mistral":
+                    try:
+                        chat_history.append(ChatMessage(role="user", content=user_input))
+                        response = client.chat(
+                            model=MODEL,
+                            messages=chat_history,
+                            temperature=0.7,
+                            max_tokens=2048
+                        )
+                        ai_response = response.choices[0].message.content
+                        chat_history.append(ChatMessage(role="assistant", content=ai_response))
+                        
+                        # Print response in a formatted bubble
+                        print(format_chat_bubble(ai_response, "Strix"))
+                        
+                    except Exception as e:
+                        stop_event.set()
+                        loader_thread.join()
+                        print(PALETTE["error"] + f"\n[ERROR] {e}" + PALETTE["reset"])
+                        continue
+                    finally:
+                        stop_event.set()
+                        loader_thread.join()
 
         except KeyboardInterrupt:
             print("\n" + PALETTE["muted"] + "Exiting program." + PALETTE["reset"])
@@ -530,7 +868,6 @@ Rules:
             continue
 
 def main():
-    """Main entry point for the strix command."""
     parser = argparse.ArgumentParser(description="Strix: Command-line pentesting assistant.")
     parser.add_argument('--auto-save', action='store_true', help='Bypass confirmation prompts (USE WITH CAUTION)')
     parser.add_argument('--prompt', choices=['pentest', 'ctf', 'vuln-research'], 
