@@ -5,10 +5,23 @@ Strix is a command-line penetration testing assistant powered by AI. It integrat
 ## Features
 
 - **Multi-AI Support**: Works with Google Gemini, OpenAI GPT-4, Anthropic Claude, Groq LLaMA 3, and Mistral
+- **Expanded Model Selection**: Access to multiple models from each provider (e.g., gemini-2.5-flash, gpt-4o, claude-3-opus, etc.)
 - **Tool Integration**: Built-in functions for common pentesting tools (nmap, subfinder, gobuster, etc.)
 - **Interactive Mode**: Real-time conversation interface with the AI assistant
+- **Enhanced UX**: Improved user experience with prompt_toolkit for better input handling
 - **Confirmation Prompts**: Asks for confirmation before executing dangerous commands
 - **Auto-Save Mode**: Optional bypass for experienced users
+
+## What's New in v0.1.1
+
+- **Expanded Model Support**: Added support for multiple models from each AI provider
+  - **Google Gemini**: gemini-2.5-flash, gemini-2.0-flash, gemini-1.5-pro, gemini-1.5-pro-exp, gemini-1.0-pro
+  - **OpenAI**: gpt-4, gpt-4-turbo, gpt-4o, gpt-3.5-turbo
+  - **Anthropic**: claude-3-sonnet, claude-3-opus, claude-3-haiku, claude-2.1
+  - **Groq**: llama3-70b-8192, llama-3.1-8b, llama-3.1-70b, mixtral-8x7b, gemma-7b
+  - **Mistral**: mistral-small-latest, mistral-large, mistral-medium, mistral-nemo
+- **Enhanced User Experience**: Improved input handling using prompt_toolkit with better formatting and interaction
+- **Better Model Selection Menu**: Organized and expanded model selection interface
 
 ## Installation
 
@@ -113,18 +126,44 @@ Rules:
 
 ## Supported AI Models
 
-- Google Gemini (gemini-2.5-flash)
-- OpenAI GPT-4 (gpt-4)
-- Anthropic Claude (claude-3-sonnet)
-- Groq LLaMA 3 (llama3-70b-8192)
-- Mistral (mistral-small-latest)
+### Google Gemini
+- gemini-2.5-flash (default)
+- gemini-2.0-flash
+- gemini-1.5-pro
+- gemini-1.5-pro-exp
+- gemini-1.0-pro
+
+### OpenAI
+- gpt-4
+- gpt-4-turbo
+- gpt-4o
+- gpt-3.5-turbo
+
+### Anthropic Claude
+- claude-3-sonnet
+- claude-3-opus
+- claude-3-haiku
+- claude-2.1
+
+### Groq
+- llama3-70b-8192
+- llama-3.1-8b
+- llama-3.1-70b
+- mixtral-8x7b
+- gemma-7b
+
+### Mistral
+- mistral-small-latest
+- mistral-large
+- mistral-medium
+- mistral-nemo
 
 ## Required Tools
 
 For full functionality, install these security tools:
 - subfinder
 - nmap
-- gobuster/gobuster
+- gobuster
 Or you can use your local tools that are already installed.
 
 ## License
