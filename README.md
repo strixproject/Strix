@@ -177,13 +177,19 @@ Or you can use your local tools that are already installed.
 ## Documentation
 
 Model selection
+
 ![doc](https://strixproject.github.io/1.png)
 
+
 Running Tools
+
 ![doc](https://strixproject.github.io/2.png)
 
+
 Write Scripts
+
 ![doc](https://strixproject.github.io/3.png)
+
 
 ## License
 
