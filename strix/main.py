@@ -54,7 +54,6 @@ def get_yes_no_input(message: str) -> bool:
         colored_message = ANSI(message)
         return confirm(colored_message)
     except ImportError:
-        # Fallback to regular input if prompt_toolkit is not available
         return input(message).strip().lower() in ['y', 'yes']
 
 
@@ -65,16 +64,15 @@ def get_text_input(prompt_text: str) -> str:
         colored_prompt = ANSI(prompt_text)
         return prompt(colored_prompt).strip()
     except ImportError:
-        # Fallback to regular input if prompt_toolkit is not available
         return input(prompt_text).strip()
 
 
 def ensure_env_file():
     env_path = os.path.expanduser("~/Strix/.env")
-    
+
 
     os.makedirs(os.path.dirname(env_path), exist_ok=True)
-    
+
 
     if not os.path.exists(env_path):
         print(PALETTE["accent"] + f"\nCreating .env file at: {env_path}" + PALETTE["reset"])
@@ -88,106 +86,98 @@ def ensure_env_file():
             f.write("# MISTRAL_API_KEY=your_mistral_api_key_here\n")
             f.write("# TELEGRAM_BOT_TOKEN=your_telegram_bot_token_here\n")
         print(PALETTE["success"] + f"Empty .env file created. Please add your API keys to {env_path}" + PALETTE["reset"])
-    
+
     return env_path
 
 
 def select_ai_model():
 
     ensure_env_file()
-    
+
 
     env_path = os.path.expanduser("~/Strix/.env")
-    
+
 
     load_dotenv(env_path, override=True)
     model_choice = os.getenv("STRIX_MODEL_CHOICE")
-    
+
     if model_choice and model_choice != "":
         print(PALETTE["accent"] + f"\nUsing saved model choice: {model_choice}" + PALETTE["reset"])
 
-        # Expanded model mapping with multiple options per provider
         model_map = {
-            # Gemini models
             "1": ("gemini", os.getenv("GOOGLE_API_KEY"), "gemini-2.5-flash"),
             "11": ("gemini", os.getenv("GOOGLE_API_KEY"), "gemini-2.0-flash"),
             "12": ("gemini", os.getenv("GOOGLE_API_KEY"), "gemini-1.5-pro"),
             "13": ("gemini", os.getenv("GOOGLE_API_KEY"), "gemini-1.5-pro-exp"),
             "14": ("gemini", os.getenv("GOOGLE_API_KEY"), "gemini-1.0-pro"),
-            
-            # OpenAI models
+
             "2": ("openai", os.getenv("OPENAI_API_KEY"), "gpt-4"),
             "21": ("openai", os.getenv("OPENAI_API_KEY"), "gpt-4-turbo"),
             "22": ("openai", os.getenv("OPENAI_API_KEY"), "gpt-4o"),
             "23": ("openai", os.getenv("OPENAI_API_KEY"), "gpt-3.5-turbo"),
-            
-            # Anthropic models
+
             "3": ("anthropic", os.getenv("ANTHROPIC_API_KEY"), "claude-3-sonnet"),
             "31": ("anthropic", os.getenv("ANTHROPIC_API_KEY"), "claude-3-opus"),
             "32": ("anthropic", os.getenv("ANTHROPIC_API_KEY"), "claude-3-haiku"),
             "33": ("anthropic", os.getenv("ANTHROPIC_API_KEY"), "claude-2.1"),
-            
-            # Groq models
+
             "4": ("groq", os.getenv("GROQ_API_KEY"), "llama3-70b-8192"),
             "41": ("groq", os.getenv("GROQ_API_KEY"), "llama-3.1-8b"),
             "42": ("groq", os.getenv("GROQ_API_KEY"), "llama-3.1-70b"),
             "43": ("groq", os.getenv("GROQ_API_KEY"), "mixtral-8x7b"),
             "44": ("groq", os.getenv("GROQ_API_KEY"), "gemma-7b"),
-            
-            # Mistral models
+
             "5": ("mistral", os.getenv("MISTRAL_API_KEY"), "mistral-small-latest"),
             "51": ("mistral", os.getenv("MISTRAL_API_KEY"), "mistral-large"),
             "52": ("mistral", os.getenv("MISTRAL_API_KEY"), "mistral-medium"),
             "53": ("mistral", os.getenv("MISTRAL_API_KEY"), "mistral-nemo"),
         }
-        
+
         if model_choice in model_map:
             return model_map[model_choice]
         else:
             return "gemini", os.getenv("GOOGLE_API_KEY"), "gemini-2.5-flash"
-    
+
     print(PALETTE["accent"] + "\nSelect AI Model:" + PALETTE["reset"])
-    
-    # Detailed model selection menu
+
     print("\n[1]  Google Gemini")
     print("     1. gemini-2.5-flash (default)")
     print("     11. gemini-2.0-flash")
     print("     12. gemini-1.5-pro")
     print("     13. gemini-1.5-pro-exp")
     print("     14. gemini-1.0-pro")
-    
+
     print("\n[2]  OpenAI")
     print("     2. gpt-4")
     print("     21. gpt-4-turbo")
     print("     22. gpt-4o")
     print("     23. gpt-3.5-turbo")
-    
+
     print("\n[3]  Anthropic")
     print("     3. claude-3-sonnet")
     print("     31. claude-3-opus")
     print("     32. claude-3-haiku")
     print("     33. claude-2.1")
-    
+
     print("\n[4]  Groq")
     print("     4. llama3-70b-8192")
     print("     41. llama-3.1-8b")
     print("     42. llama-3.1-70b")
     print("     43. mixtral-8x7b")
     print("     44. gemma-7b")
-    
+
     print("\n[5]  Mistral")
     print("     5. mistral-small-latest")
     print("     51. mistral-large")
     print("     52. mistral-medium")
     print("     53. mistral-nemo")
-    
+
     choice = input("\nEnter choice (e.g., 1 for gemini-2.5-flash, 22 for gpt-4o) [default: 1]: ").strip() or "1"
-    
+
 
     with open(env_path, 'a') as f:
         f.write(f"\nSTRIX_MODEL_CHOICE={choice}\n")
-    
-    # Expanded model selection logic
+
     if choice in ["11", "12", "13", "14"]:
         if choice == "11":
             return "gemini", os.getenv("GOOGLE_API_KEY"), "gemini-2.0-flash"
@@ -238,7 +228,6 @@ def select_ai_model():
         else:
             return "mistral", os.getenv("MISTRAL_API_KEY"), "mistral-small-latest"
     else:
-        # Default to gemini-2.5-flash
         return "gemini", os.getenv("GOOGLE_API_KEY"), "gemini-2.5-flash"
 
 def validate_api_key(ai_type, api_key):
@@ -353,20 +342,17 @@ def define_tools():
 
 
 def run_command(command: str, auto_save: bool = False) -> str:
-    # Security validation: sanitize and validate command to prevent injection
     if not command or len(command.strip()) == 0:
         return "Error: Empty command provided."
-    
-    # Validate that command doesn't contain dangerous characters/sequences
+
     dangerous_patterns = [';', '&&', '||', '|', '`', '$(', '>', '<', '>>', '>>>', ';&', ';&;']
     for pattern in dangerous_patterns:
         if pattern in command:
             return f"Error: Command contains potentially dangerous pattern: {pattern}"
-    
-    # Basic validation to prevent directory traversal or path manipulation
+
     if '..' in command or command.startswith('/') or command.startswith('../'):
         return "Error: Command contains invalid path pattern."
-    
+
     if not auto_save:
         print(PALETTE["command"] + "\n[AI PROPOSED COMMAND]\n  $ " + command + "\n" + PALETTE["reset"])
         confirmation = "y" if get_yes_no_input("Are you sure you want to execute this command? [y/N]: ") else "n"
@@ -374,9 +360,8 @@ def run_command(command: str, auto_save: bool = False) -> str:
             return "Command cancelled by user."
     else:
         print(PALETTE["muted"] + f"\n[AUTO-SAVE MODE ON] Executing: $ {command}" + PALETTE["reset"])
-        
+
     try:
-        # Use shell=False and split the command to prevent shell injection
         import shlex
         cmd_parts = shlex.split(command)
         result = subprocess.run(cmd_parts, check=True, text=True, capture_output=True, encoding='utf-8')
@@ -386,7 +371,6 @@ def run_command(command: str, auto_save: bool = False) -> str:
     except subprocess.CalledProcessError as e:
         return f"Error: Command failed. Exit code {e.returncode}.\nStderr: {e.stderr}"
     except ValueError as e:
-        # This handles shlex.split errors
         return f"Error: Invalid command format: {e}"
     except Exception as e:
         return f"Error occurred: {e}"
@@ -420,14 +404,12 @@ def write_file(path: str, content: str, auto_save: bool = False) -> str:
         content_preview = "\n".join(lines[:preview_lines])
         if len(lines) > preview_lines:
             content_preview += f"\n... (and {len(lines) - preview_lines} more lines)"
-        
-        # Display path information
+
         print(PALETTE["command"] + f"\n[AI PROPOSED WRITE]\n  Path: {path}" + PALETTE["reset"])
-        
-        # Wrap content preview in a bubble format
+
         bubble_content = f"Content preview:\n{content_preview}"
         print(format_chat_bubble(bubble_content, "File Content Preview"))
-        
+
         confirmation = "y" if get_yes_no_input("Are you sure you want to write this file? [y/N]: ") else "n"
         if confirmation != 'y':
             return "File write cancelled by user."
@@ -484,45 +466,152 @@ def call_function(func_call, auto_save: bool):
         return clear_screen()
     return f"Error: Function '{function_name}' not recognized."
 
-def format_chat_bubble(content: str, sender: str = "AI", width: int = 80, color: str = None) -> str:
+def get_responsive_width():
+    """Get responsive width for chat bubbles based on terminal size"""
+    try:
+        terminal_width = os.get_terminal_size().columns
+        bubble_width = int(terminal_width * 0.8)
+        bubble_width = min(bubble_width, 120)
+        bubble_width = max(bubble_width, 60)
+        return bubble_width
+    except OSError:
+        return 80
+
+def parse_and_execute_tool_from_text(text: str, auto_save: bool = False):
+    """
+    Parse text output from AI and execute appropriate tools if detected.
+    This function looks for command patterns in the AI's text response
+    and executes the corresponding tools directly.
+    """
+    import re
+
+    subfinder_match = re.search(r'(?:subfinder\s+-d\s+|--domain\s+)([^\s\]\n]+)', text, re.IGNORECASE)
+    if subfinder_match:
+        domain = subfinder_match.group(1).strip('"`\'')
+        print(PALETTE["tool_call"] + f"\n[TOOL DETECTED] scan_subdomains({domain})" + PALETTE["reset"])
+        result = scan_subdomains(domain, auto_save)
+        print(PALETTE["tool_output"] + f"\n[TOOL OUTPUT]\n{result}" + PALETTE["reset"])
+        return result
+
+    nmap_patterns = [
+        r'nmap\s+([^\n]+?)\s+(-p-|-p\s+\d+|\s)--target\s+([^\s\n]+)',
+        r'nmap\s+([^\n]+?)\s+([^\s\n]+)',
+        r'nmap\s+([^\s\n]+)'
+    ]
+
+    for pattern in nmap_patterns:
+        nmap_matches = re.finditer(pattern, text, re.IGNORECASE)
+        for match in nmap_matches:
+            cmd_parts = match.group(0).split()
+            target = None
+            for part in reversed(cmd_parts):
+                if not part.startswith('-') and part.lower() != 'nmap':
+                    target = part.strip('"`\'')
+                    break
+            if target:
+                print(PALETTE["tool_call"] + f"\n[TOOL DETECTED] scan_ports({target})" + PALETTE["reset"])
+                result = scan_ports(target, auto_save)
+                print(PALETTE["tool_output"] + f"\n[TOOL OUTPUT]\n{result}" + PALETTE["reset"])
+                return result
+
+    gobuster_match = re.search(r'gobuster\s+dir\s+-u\s+([^\s\n]+)', text, re.IGNORECASE)
+    if gobuster_match:
+        url = gobuster_match.group(1).strip('"`\'')
+        print(PALETTE["tool_call"] + f"\n[TOOL DETECTED] enum_web({url})" + PALETTE["reset"])
+        result = enum_web(url, auto_save)
+        print(PALETTE["tool_output"] + f"\n[TOOL OUTPUT]\n{result}" + PALETTE["reset"])
+        return result
+
+    read_file_match = re.search(r'(?:read_file|cat|less|more|head|tail)\s+([^\s\n]+)', text, re.IGNORECASE)
+    if read_file_match:
+        file_path = read_file_match.group(1).strip('"`\'')
+        print(PALETTE["tool_call"] + f"\n[TOOL DETECTED] read_file({file_path})" + PALETTE["reset"])
+        result = read_file(file_path)
+        print(PALETTE["tool_output"] + f"\n[TOOL OUTPUT]\n{result}" + PALETTE["reset"])
+        return result
+
+    command_lines = [line.strip() for line in text.split('\n') if line.strip()]
+    for line in command_lines:
+        if line.startswith('$ ') or line.startswith('```') or any(cmd in line for cmd in ['sudo ', 'python ', 'curl ', 'wget ', 'ls ', 'pwd ', 'ps ', 'netstat ', 'whois ']):
+            if line.startswith('$ '):
+                command = line[2:].strip()
+            elif line.startswith('```'):
+                command = line[3:].strip() if len(line) > 3 else ''
+                if command.endswith('```'):
+                    command = command[:-3].strip()
+            else:
+                command = line.strip()
+
+            command = command.strip('`')
+
+            if command and not command.startswith('#'):
+                print(PALETTE["tool_call"] + f"\n[TOOL DETECTED] run_command({command})" + PALETTE["reset"])
+                result = run_command(command, auto_save)
+                print(PALETTE["tool_output"] + f"\n[TOOL OUTPUT]\n{result}" + PALETTE["reset"])
+                return result
+
+    return None
+
+def format_chat_bubble(content: str, sender: str = "AI", width: int = None, color: str = None) -> str:
+    if width is None:
+        width = get_responsive_width()
+
     lines = content.split('\n')
     formatted_lines = []
-    
-    if not color:
-        if sender == "AI" or sender == "Strix":
-            color = PALETTE["ai_response"]
-        elif sender == "AI THOUGHT":
-            color = PALETTE["tool_call"]
-        elif sender.startswith("TOOL"):
-            color = PALETTE["tool_output"]
-        else:
-            color = PALETTE["muted"]
-    
-    formatted_lines.append(color + "┌" + "─" * (width - 2) + "┐" + PALETTE["reset"])
-    
+
+    content_color = Fore.WHITE + Style.NORMAL
+
+    border_color = PALETTE["accent"]
+
+    formatted_lines.append(border_color + "┌" + "─" * (width - 2) + "┐" + PALETTE["reset"])
+
     if sender:
-        sender_line = f"┌─ {sender} ─{'─' * (width - 6 - len(sender))}┐"
-        if len(sender_line) <= width + 2:
-            formatted_lines[0] = color + sender_line[:width] + "┐" + PALETTE["reset"] if len(sender_line) > width else color + sender_line + PALETTE["reset"]
-        else:
-            formatted_lines.append(color + "┌─ " + sender + " " + "─" * max(0, width - 5 - len(sender)) + "┐" + PALETTE["reset"])
-    
+        sender_prefix = f"┌─ {sender} "
+        remaining_width = width - len(sender_prefix) - 1
+        if remaining_width > 0:
+            sender_line = sender_prefix + "─" * remaining_width + "┐"
+            formatted_lines[0] = border_color + sender_line + PALETTE["reset"]
+
     import textwrap
     for line in lines:
         if line.strip() == "":
-            formatted_lines.append(color + "│" + " " * (width - 2) + "│" + PALETTE["reset"])
+            formatted_lines.append(border_color + "│" + " " * (width - 2) + "│" + PALETTE["reset"])
         else:
-            wrapped = textwrap.fill(line, width - 4, break_long_words=True, break_on_hyphens=True, replace_whitespace=False)
+            clean_line = line
+            if clean_line.startswith('#') or clean_line.startswith('---'):
+                if clean_line.startswith('---'):
+                    continue
+                else:
+                    clean_line = clean_line.lstrip('# ')
+
+            text_width = width - 4
+            wrapped = textwrap.fill(clean_line, text_width, break_long_words=True, break_on_hyphens=True)
             for wrapped_line in wrapped.split('\n'):
-                padded_line = wrapped_line.ljust(width - 4)
-                formatted_lines.append(color + f"│ {padded_line} │" + PALETTE["reset"])
-    
-    formatted_lines.append(color + "└" + "─" * (width - 2) + "┘" + PALETTE["reset"])
-    
+                padded_line = wrapped_line.ljust(text_width)
+                formatted_lines.append(f"{border_color}│{PALETTE['reset']} {content_color}{padded_line}{PALETTE['reset']} {border_color}│{PALETTE['reset']}")
+
+    formatted_lines.append(border_color + "└" + "─" * (width - 2) + "┘" + PALETTE["reset"])
+
     bubble_str = "\n".join(formatted_lines)
     return "\n" + bubble_str
 
 def render_markdown(text: str) -> str:
+    lines = text.split('\n')
+    processed_lines = []
+
+    for line in lines:
+        if line.strip() == '---' or line.strip().startswith('--- '):
+            continue
+        elif line.strip().startswith('# ') or line.strip().startswith('## ') or line.strip().startswith('### '):
+            clean_line = line.lstrip('# ')
+            processed_lines.append(clean_line)
+        elif line.strip().startswith('#') and not line.strip().startswith('# '):
+            processed_lines.append(line)
+        else:
+            processed_lines.append(line)
+
+    text = '\n'.join(processed_lines)
+
     text = re.sub(r'^\*\s+(.+)', PALETTE["accent"] + '- ' + r'\1' + PALETTE["reset"], text, flags=re.MULTILINE)
     text = re.sub(r'\*\*(.*?)\*\*', lambda match: PALETTE["accent"] + Style.BRIGHT + match.group(1) + PALETTE["reset"], text)
     text = re.sub(r'\*(.*?)\*', lambda match: PALETTE["accent"] + match.group(1) + PALETTE["reset"], text)
@@ -532,10 +621,10 @@ def show_loading_indicator(stop_event):
     animation = ['⣾', '⣷', '⣯', '⣟', '⡿', '⢿', '⣻', '⣽']
     idx = 0
     while not stop_event.is_set():
-        print(f"\r{PALETTE['muted']}{animation[idx % len(animation)]} Thinking...{PALETTE['reset']}", end="", flush=True)
+        print(f"\r{PALETTE['accent']}{animation[idx % len(animation)]} Thinking...{PALETTE['reset']}", end="", flush=True)
         idx += 1
         time.sleep(0.1)
-    print("\r" + " " * 20 + "\r", end="", flush=True)
+    print("\r" + " " * 30 + "\r", end="", flush=True)
 
 
 def chat_loop(ai_type, API_KEY, MODEL, auto_save: bool, prompt_type: str = None):
@@ -552,6 +641,11 @@ Rules:
 5. Point out common pitfalls and how to avoid them.
 6. Encourage learning and understanding over quick solutions.
 7. Respect challenge categories (crypto, forensics, web, etc.).
+8. USE TOOLS DIRECTLY when appropriate to assist with CTF challenges (e.g., run_command, read_file, write_file). Do not just describe the command in text - call the tool directly.
+9. If you need to analyze a file, use read_file directly. If you need to run a command, use run_command directly.
+10. Do not suggest commands for the user to run - instead, execute them yourself using tools when appropriate.
+11. Do not use markdown heading formats (###, ##, #, ---) in your responses. Use regular text formatting instead.
+12. Use • instead of * for lists.
         """
     elif prompt_type == "vuln-research":
         system_prompt = """
@@ -566,8 +660,13 @@ Rules:
 6. Provide guidance on responsible disclosure procedures.
 7. Detail attack vectors and mitigation strategies.
 8. Emphasize ethical considerations in all recommendations.
+9. USE TOOLS DIRECTLY when appropriate to assist with vulnerability analysis (e.g., scan_subdomains, scan_ports, enum_web, run_command). Do not just describe the scan in text - call the tool directly.
+10. If you need to enumerate subdomains, use scan_subdomains directly. If you need to scan ports, use scan_ports directly.
+11. Do not suggest commands for the user to run - instead, execute them yourself using tools when appropriate.
+12. Do not use markdown heading formats (###, ##, #, ---) in your responses. Use regular text formatting instead.
+13. Use • instead of * for lists.
         """
-    else: 
+    else:
         system_prompt = """
 You are Strix, a technical penetration testing assistant.
 
@@ -580,10 +679,14 @@ Rules:
 6. Match the user's language.
 7. Use markdown: **bold**, *italic*, * lists.
 8. You can create any script according to user requests, and can save the script via the save file function.
+9. USE TOOLS DIRECTLY when appropriate (e.g., scan_subdomains, scan_ports, enum_web, run_command, read_file, write_file). Do not just describe the command in text - call the tool directly.
+10. If you need to enumerate subdomains, use scan_subdomains directly. If you need to scan ports, use scan_ports directly.
+11. Do not suggest commands for the user to run - instead, execute them yourself using tools when appropriate.
+12. Do not use markdown heading formats (###, ##, #, ---) in your responses. Use regular text formatting instead.
+13. Use • instead of * for lists.
         """
-    
 
-    # Initialize chat for each AI provider with proper tool support and error handling
+
     if ai_type == "gemini":
         try:
             pentest_tool = define_tools()
@@ -596,7 +699,6 @@ Rules:
         try:
             import openai
             client = openai.OpenAI(api_key=API_KEY)
-            # Initialize conversation history
             chat_history = [
                 {"role": "system", "content": system_prompt}
             ]
@@ -607,7 +709,6 @@ Rules:
         try:
             import anthropic
             client = anthropic.Anthropic(api_key=API_KEY)
-            # Initialize conversation history
             chat_history = [
                 {"role": "system", "content": system_prompt}
             ]
@@ -618,7 +719,6 @@ Rules:
         try:
             import groq
             client = groq.Groq(api_key=API_KEY)
-            # Initialize conversation history
             chat_history = [
                 {"role": "system", "content": system_prompt}
             ]
@@ -631,7 +731,6 @@ Rules:
             from mistralai.client import MistralClient
             from mistralai.models.chat_completion import ChatMessage
             client = MistralClient(api_key=API_KEY)
-            # Initialize conversation history
             chat_history = [
                 ChatMessage(role="system", content=system_prompt)
             ]
@@ -670,9 +769,8 @@ Rules:
     while True:
         try:
             if use_prompt_toolkit:
-                # Buat placeholder dengan warna muted langsung
                 placeholder_text = ANSI(PALETTE["placeholder"] + "Type your message or @path/to/file" + PALETTE["reset"])
-            
+
                 user_input = session.prompt(
                     "\n> ",
                     placeholder=placeholder_text
@@ -686,14 +784,12 @@ Rules:
             if not user_input.strip():
                 continue
 
-            # Check for @ symbol functionality to read files directly
             if user_input.startswith('@'):
-                file_path = user_input[1:].strip()  # Remove @ symbol and get file path
+                file_path = user_input[1:].strip()
                 if file_path:
                     file_content = read_file(file_path)
-                    # Display the file content in a bubble format with appropriate sender
                     print(format_chat_bubble(file_content, f"File Content: {file_path}"))
-                    continue  # Skip the rest of the processing and wait for next input
+                    continue
                 else:
                     print(PALETTE["error"] + "Please provide a file path after @ (e.g., @strix/main.py)" + PALETTE["reset"])
                     continue
@@ -735,6 +831,32 @@ Rules:
                             break
 
                     if function_call:
+                        user_request_lower = user_input.lower()
+                        is_text_request = any(keyword in user_request_lower for keyword in
+                                            ['strategi', 'strategy', 'how to', 'explain', 'how can i', 'tips',
+                                             'advice', 'tutorial', 'guide', 'write', 'buatkan', 'buat',
+                                             'what is', 'describe', 'buatkan strategi', 'cara', 'step by step'])
+
+                        if is_text_request and function_call.name in ['run_command', 'scan_subdomains', 'scan_ports', 'enum_web']:
+                            stop_event.set()
+                            loader_thread.join()
+
+                            try:
+                                guidance_text = f"Please provide the requested information in text format instead of suggesting commands. User requested: {user_input}"
+
+                                stop_event = threading.Event()
+                                loader_thread = threading.Thread(target=show_loading_indicator, args=(stop_event,))
+                                loader_thread.daemon = True
+                                loader_thread.start()
+
+                                response = chat.send_message(guidance_text)
+                            except Exception as guidance_err:
+                                stop_event.set()
+                                loader_thread.join()
+                                print(PALETTE["error"] + f"\n[GUIDANCE ERROR] {guidance_err}" + PALETTE["reset"])
+                                break
+                            continue
+
                         try:
                             function_response = call_function(function_call, auto_save)
                             print(PALETTE["command"] + f"\n[OUTPUT]\n{function_response}" + PALETTE["reset"])
@@ -763,7 +885,6 @@ Rules:
                             print(format_chat_bubble(rendered_text, "Strix"))
                         break
             else:
-                # Handle chat for non-Gemini models
                 if ai_type == "openai":
                     try:
                         chat_history.append({"role": "user", "content": user_input})
@@ -775,10 +896,11 @@ Rules:
                         )
                         ai_response = response.choices[0].message.content
                         chat_history.append({"role": "assistant", "content": ai_response})
-                        
-                        # Print response in a formatted bubble
-                        print(format_chat_bubble(ai_response, "Strix"))
-                        
+
+                        tool_result = parse_and_execute_tool_from_text(ai_response, auto_save)
+                        if tool_result is None:
+                            print(format_chat_bubble(ai_response, "Strix"))
+
                     except Exception as e:
                         stop_event.set()
                         loader_thread.join()
@@ -793,16 +915,17 @@ Rules:
                         chat_history.append({"role": "user", "content": user_input})
                         response = client.messages.create(
                             model=MODEL,
-                            messages=chat_history[1:],  # Skip system message, Anthropic handles it differently
+                            messages=chat_history[1:],
                             max_tokens=2048,
                             temperature=0.7
                         )
                         ai_response = response.content[0].text
                         chat_history.append({"role": "assistant", "content": ai_response})
-                        
-                        # Print response in a formatted bubble
-                        print(format_chat_bubble(ai_response, "Strix"))
-                        
+
+                        tool_result = parse_and_execute_tool_from_text(ai_response, auto_save)
+                        if tool_result is None:
+                            print(format_chat_bubble(ai_response, "Strix"))
+
                     except Exception as e:
                         stop_event.set()
                         loader_thread.join()
@@ -823,10 +946,11 @@ Rules:
                         )
                         ai_response = response.choices[0].message.content
                         chat_history.append({"role": "assistant", "content": ai_response})
-                        
-                        # Print response in a formatted bubble
-                        print(format_chat_bubble(ai_response, "Strix"))
-                        
+
+                        tool_result = parse_and_execute_tool_from_text(ai_response, auto_save)
+                        if tool_result is None:
+                            print(format_chat_bubble(ai_response, "Strix"))
+
                     except Exception as e:
                         stop_event.set()
                         loader_thread.join()
@@ -847,10 +971,11 @@ Rules:
                         )
                         ai_response = response.choices[0].message.content
                         chat_history.append(ChatMessage(role="assistant", content=ai_response))
-                        
-                        # Print response in a formatted bubble
-                        print(format_chat_bubble(ai_response, "Strix"))
-                        
+
+                        tool_result = parse_and_execute_tool_from_text(ai_response, auto_save)
+                        if tool_result is None:
+                            print(format_chat_bubble(ai_response, "Strix"))
+
                     except Exception as e:
                         stop_event.set()
                         loader_thread.join()
@@ -882,4 +1007,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    main()  
