@@ -2,6 +2,8 @@
 
 Strix is a command-line penetration testing assistant powered by AI. It integrates with various AI models to help cybersecurity professionals and enthusiasts with technical tasks, while maintaining strict security controls to prevent unintended actions.
 
+![Strix](https://strixproject.github.io/Strix.png)
+
 ## Features
 
 - **Multi-AI Support**: Works with Google Gemini, OpenAI GPT-4, Anthropic Claude, Groq LLaMA 3, and Mistral
