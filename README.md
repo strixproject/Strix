@@ -12,6 +12,12 @@ Strix is a command-line penetration testing assistant powered by AI. It integrat
 - **Confirmation Prompts**: Asks for confirmation before executing dangerous commands
 - **Auto-Save Mode**: Optional bypass for experienced users
 
+## What's New in v0.1.2
+
+- **Bug Fixes**: Resolved several stability issues and bugs from previous version
+- **Performance Improvements**: Enhanced response times and overall application performance
+- **UI Enhancements**: Minor user interface improvements for better user experience
+
 ## What's New in v0.1.1
 
 - **Expanded Model Support**: Added support for multiple models from each AI provider
