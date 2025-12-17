@@ -1,35 +1,52 @@
-# Strix
+# Strix v0.1.3
 
 Strix is a command-line penetration testing assistant powered by AI. It integrates with various AI models to help cybersecurity professionals and enthusiasts with technical tasks, while maintaining strict security controls to prevent unintended actions.
-
-![Strix](https://strixproject.github.io/Strix.png)
 
 ## Features
 
 - **Multi-AI Support**: Works with Google Gemini, OpenAI GPT-4, Anthropic Claude, Groq LLaMA 3, and Mistral
 - **Expanded Model Selection**: Access to multiple models from each provider (e.g., gemini-2.5-flash, gpt-4o, claude-3-opus, etc.)
+- **Command-Line Model Selection**: Direct model selection via `--model` command (new in v0.1.3)
 - **Tool Integration**: Built-in functions for common pentesting tools (nmap, subfinder, gobuster, etc.)
 - **Interactive Mode**: Real-time conversation interface with the AI assistant
 - **Enhanced UX**: Improved user experience with prompt_toolkit for better input handling
 - **Confirmation Prompts**: Asks for confirmation before executing dangerous commands
 - **Auto-Save Mode**: Optional bypass for experienced users
 
-## What's New in v0.1.2
+<details open>
+<summary><strong>What's New in v0.1.3</strong></summary>
 
-- **Bug Fixes**: Resolved several stability issues and bugs from previous version
-- **Performance Improvements**: Enhanced response times and overall application performance
-- **UI Enhancements**: Minor user interface improvements for better user experience
+- **New --model Command**: Direct model selection from command line
+  - Specify exact models: `strix --model gpt-4`, `strix --model gemini-2.5-flash`
+  - Use provider names: `strix --model openai`, `strix --model groq`
+  - Combine with other options: `strix --model gpt-4 --prompt ctf --auto-save`
+- **Enhanced Dependency Management**: All AI provider packages now included in installation
 
-## What's New in v0.1.1
+</details>
 
-- **Expanded Model Support**: Added support for multiple models from each AI provider
+<details>
+<summary><strong>What's New in v0.1.2</strong></summary>
+
+- **Bug Fixes**: Resolved several stability issues and bugs
+- **Performance Improvements**: Faster responses and better overall performance
+- **UI Enhancements**: Minor interface improvements
+
+</details>
+
+<details>
+<summary><strong>What's New in v0.1.1</strong></summary>
+
+- **Expanded Model Support**
   - **Google Gemini**: gemini-2.5-flash, gemini-2.0-flash, gemini-1.5-pro, gemini-1.5-pro-exp, gemini-1.0-pro
   - **OpenAI**: gpt-4, gpt-4-turbo, gpt-4o, gpt-3.5-turbo
   - **Anthropic**: claude-3-sonnet, claude-3-opus, claude-3-haiku, claude-2.1
   - **Groq**: llama3-70b-8192, llama-3.1-8b, llama-3.1-70b, mixtral-8x7b, gemma-7b
   - **Mistral**: mistral-small-latest, mistral-large, mistral-medium, mistral-nemo
-- **Enhanced User Experience**: Improved input handling using prompt_toolkit with better formatting and interaction
-- **Better Model Selection Menu**: Organized and expanded model selection interface
+- **Enhanced User Experience**: Improved input handling with prompt_toolkit
+- **Better Model Selection Menu**
+
+</details>
+
 
 ## Installation
 
@@ -70,6 +87,23 @@ strix --auto-save
 # Start with a specific system prompt
 strix --prompt ctf
 strix --prompt vuln-research
+
+# Start with a specific AI model (new in v0.1.3)
+strix --model gpt-4
+strix --model gemini-2.5-flash
+strix --model claude-3-sonnet
+strix --model llama3-70b-8192
+strix --model mistral-large
+
+# You can also specify provider names (uses default model for that provider)
+strix --model openai      # Uses gpt-4 by default
+strix --model gemini      # Uses gemini-2.5-flash by default
+strix --model anthropic   # Uses claude-3-sonnet by default
+strix --model groq        # Uses llama3-70b-8192 by default
+strix --model mistral     # Uses mistral-small-latest by default
+
+# Combine with other options
+strix --model gpt-4 --prompt ctf --auto-save
 
 # Show help
 strix --help
@@ -173,23 +207,6 @@ For full functionality, install these security tools:
 - nmap
 - gobuster
 Or you can use your local tools that are already installed.
-
-## Documentation
-
-Model selection
-
-![doc](https://strixproject.github.io/1.png)
-
-
-Running Tools
-
-![doc](https://strixproject.github.io/2.png)
-
-
-Write Scripts
-
-![doc](https://strixproject.github.io/3.png)
-
 
 ## License
 
